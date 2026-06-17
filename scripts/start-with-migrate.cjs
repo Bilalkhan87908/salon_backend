@@ -30,12 +30,13 @@ function baseline() {
 }
 
 function deployMigrations() {
-  const result = run("npx", ["prisma", "migrate", "deploy"]);
-  if (result.status !== 0) {
-    console.log("[startup] migrate deploy failed after baseline, trying db push...");
-    const push = run("npx", ["prisma", "db", "push", "--accept-data-loss"]);
-    if (push.status !== 0) {
-      process.exit(push.status || 1);
+  console.log("[startup] Syncing database schema (preserving existing data)...");
+  const push = run("npx", ["prisma", "db", "push"]);
+  if (push.status !== 0) {
+    console.log("[startup] db push failed, attempting migrate deploy...");
+    const migrate = run("npx", ["prisma", "migrate", "deploy"]);
+    if (migrate.status !== 0) {
+      console.log("[startup] All schema sync methods failed. Server will start but database queries may fail.");
     }
   }
 }
